@@ -1,0 +1,5 @@
+﻿  main.cpp
+c:\users\lucassouzadi\desktop\sabertooth\sabertooth\main.cpp(3): warning C4005: 'EXIT_FAILURE': redefinição de macro
+  c:\program files (x86)\windows kits\10\include\10.0.15063.0\ucrt\stdlib.h(48): note: consulte a definição anterior de 'EXIT_FAILURE'
+c:\users\lucassouzadi\desktop\sabertooth\sabertooth\main.cpp(143): warning C4244: '=': conversão de 'double' para 'float', possível perda de dados
+c:\users\lucassouzadi\desktop\sabertooth\sabertooth\main.cpp(153): error C2660: 'glDrawElements': função não recebe 3 argumentos
