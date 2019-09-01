@@ -1,25 +1,36 @@
 #include "System.h"
+#include "AssetManager.h"
 
 #define EXIT_FAILURE -1
 #define EXIT_SUCCESS 0
 
 const char* vertex_shader =
-"#version 410\n"
-"layout(location=0) in vec3 vp;"
-"layout(location=1) in vec3 vc;"
-"out vec3 color;"
+"#version 330\n"
+
+"layout(location = 0) in vec3 vp;"
+"layout(location = 1) in vec3 vc;"
+"layout(location = 2) in vec2 tm;"
 "uniform mat4 matrix;" 
+"out vec3 color;"
+"out vec2 texture_coordinates;"
 "void main () {"
+"  texture_coordinates = tm;"
 "  color = vc;"
 "  gl_Position = matrix * vec4 (vp, 1.0);"
 "}";
 
 const char* fragment_shader =
-"#version 410\n"
+"#version 330\n"
+"in vec2 texture_coordinates;"
 "in vec3 color;"
+"uniform sampler2D texture;"
+"uniform float offsetx;"
+"uniform float offsety;"
 "out vec4 frag_color;"
 "void main () {"
-"  frag_color = vec4 (color, 1.0);"
+"	vec2 vt = vec2(texture_coordinates.x + offsetx, texture_coordinates.y + offsety);"
+"   frag_color = texture (texture, vt) * vec4(color, 1.0);"
+//"   frag_color = vec4(color, 1.0);"
 "}";
 
 int main() {
@@ -45,112 +56,216 @@ int main() {
 	glewExperimental = GL_TRUE;
 	glewInit();
 	// obtenção de versão suportada da OpenGL e renderizador
-
-	// ###############################################
-
 	const GLubyte* renderer = glGetString(GL_RENDERER);
 	const GLubyte* version = glGetString(GL_VERSION);
 	printf("Renderer: %s\n", renderer);
 	printf("OpenGL (versão suportada) %s\n", version);
 
-	//	#VBO
 
-	GLfloat points[] = {
-		0.0f, 0.5f, 0.0f,	// top
-		0.5f, -0.5f, 0.0f,	// right
-		-0.5f, -0.5f, 0.0f	// left
+	// ###############################################
+
+//	#VBO
+
+	GLfloat vertices[] = {
+		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,	// 1
+		0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f,		// 2
+		0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,	// 3
+		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f,	// 1
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,	// 4
+		0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f		// 3
 	};
-	GLuint pointVBO = 0;
-	glGenBuffers(1, &pointVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, pointVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);	GLfloat colors[] = {
-		1.0f, 0.0f, 0.0f, // red
-		0.0f, 1.0f, 0.0f, // green
-		0.0f, 0.0f, 1.0f  // blue
+
+	GLfloat texMap[] = {
+		0.0f, 0.0f,							// 1
+		0.25f, 0.0f,							// 2
+		0.25f, 0.25f,							// 3
+		0.0f, 0.0f,							// 1
+		0.0f, 0.25f,								// 4
+		0.25f, 0.25f								// 3
 	};
-	GLuint colorVBO = 0;
-	glGenBuffers(1, &colorVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-	glBufferData(GL_ARRAY_BUFFER, 9 * sizeof(GLfloat), colors, GL_STATIC_DRAW);
 
-	//	#VAO
+	GLuint verticeVBO = 0;
+	GLuint texVBO = 0;
 
-	GLuint vao = 0;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glBindBuffer(GL_ARRAY_BUFFER, pointVBO); // identifica vbo atual
+	glGenBuffers(1, &verticeVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, verticeVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glGenBuffers(1, &texVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, texVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texMap), texMap, GL_STATIC_DRAW);
+
+//	#VBO
+
+//	#VAO
+
+	GLuint VAO = 0;
+	glGenVertexArrays(1, &VAO);
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, verticeVBO); // identifica vbo atual
 	// habilitado primeiro atributo do vbo bound atual
 	glEnableVertexAttribArray(0);
 	// associação do vbo atual com primeiro atributo
 	// 0 identifica que o primeiro atributo está sendo definido
 	// 3, GL_FLOAT identifica que dados são vec3 e estão a cada 3 float.
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), NULL);
 	// é possível associar outros atributos, como normais, mapeamento e cores
 	// lembre-se: um por vértice!
-	glBindBuffer(GL_ARRAY_BUFFER, colorVBO);
-	// habilitado segundo atributo do vbo bound atual
-	glEnableVertexAttribArray(1);
-	// note que agora o atributo 1 está definido
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, NULL);
 
-	//	#SHADER PROGRAM
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+
+	glBindBuffer(GL_ARRAY_BUFFER, texVBO);
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, NULL);
+
+//	#VAO
+
+//	#SHADER PROGRAM
 
 	// identifica vs e o associa com vertex_shader
-	GLuint vs = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vs, 1, &vertex_shader, NULL);
-	glCompileShader(vs);
-	// identifica fs e o associa com fragment_shader
-	GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fs, 1, &fragment_shader, NULL);
-	glCompileShader(fs);
-	// identifica do programa, adiciona partes e faz "linkagem"
-	GLuint shader_programme = glCreateProgram();
-	glAttachShader(shader_programme, fs);
-	glAttachShader(shader_programme, vs);
-	glLinkProgram(shader_programme);
+	GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertex_shader, NULL);
+	glCompileShader(vertexShader);
 
-	//	#passar o shader programme ao OpenGL.
+	// identifica fs e o associa com fragment_shader
+	GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragment_shader, NULL);
+	glCompileShader(fragmentShader);
+
+	// identifica do programa, adiciona partes e faz "linkagem"
+	GLuint shader_program = glCreateProgram();
+	glAttachShader(shader_program, fragmentShader);
+	glAttachShader(shader_program, vertexShader);
+	glLinkProgram(shader_program);
+
+	
+	//	#passar o shader program ao OpenGL.
+	glUseProgram(shader_program);
+
 	float matrix[] = {
 		1.0f, 0.0f, 0.0f, 0.0f, // 1ª coluna
 		0.0f, 1.0f, 0.0f, 0.0f, // 2ª coluna
 		0.0f, 0.0f, 1.0f, 0.0f, // 3ª coluna
-		0.25f, 0.25f, 0.0f, 1.0f // 4ª coluna
+		0.0f, 0.0f, 0.0f, 1.0f  // 4ª coluna
 	};
-	int matrixLocation = glGetUniformLocation(shader_programme, "matrix");
-	glUseProgram(shader_programme);
+	//	#salva a matriz como uniform no program
+	int matrixLocation = glGetUniformLocation(shader_program, "matrix");
 	glUniformMatrix4fv(matrixLocation, 1, GL_FALSE, matrix);
 
-	//	#GAME LOOP
-	float speed = 1.0f;
-	float lastPosition = 0.0f;
+//	#SHADER PROGRAM
+
+//	#TEXTURA
+
+	GLuint textureID = 0;
+	glGenTextures(1, &textureID);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	int imgWidth, imgHeight;
+	unsigned char *image;
+	image = SOIL_load_image("bin/Images/carrito.png", &imgWidth, &imgHeight, 0, SOIL_LOAD_RGBA);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, imgWidth, imgHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	SOIL_free_image_data(image);
+
+	// filtragem de pixels 
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MAG_FILTER,
+		GL_LINEAR); // ou GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D,
+		GL_TEXTURE_MIN_FILTER,
+		GL_LINEAR); // ou GL_NEAREST);
+
+	// habilitar texturas
+	glEnable(GL_TEXTURE_2D);
+
+	// Para desenhar com alfa, na inicialização da aplicação, habilitar o alpha test :
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	int textureLocation = glGetUniformLocation(shader_program, "texture");
+	glUniform1i(textureLocation, 0);
+
+	int textureOffsetXLocation = glGetUniformLocation(shader_program, "offsetx");
+	int textureOffsetYLocation = glGetUniformLocation(shader_program, "offsety");
+//	#TEXTURA */
+
+//	#GAME LOOP
+
+	int numFrames = 4;
+	int numAcoes = 4;
+	float frameWidth = 1.0f / numFrames;
+	float frameHeight = 1.0f / numAcoes;
+	int frameAtual = 4;
+	int acaoAtual = 0;
+	float textureOffsetX = 0.0f;
+	float textureOffsetY = 0.0f;
+	int fps = 10;
+
+	static float speed = 0.3f;
+	static float positionX = 0.0f;
+	static float positionY = 0.0f;
+	static double previousSeconds = glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
 
+		double currentSeconds = glfwGetTime();
+		double elapsedSeconds = currentSeconds - previousSeconds;
+		previousSeconds = currentSeconds;
+		double deslocamento = elapsedSeconds * speed;
+
 		glfwPollEvents();
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {  /* Esc */
 			glfwSetWindowShouldClose(window, GLFW_TRUE);
 		}
-
-
-		static double previousSeconds = glfwGetTime();
-		double currentSeconds = glfwGetTime();
-		double elapsedSeconds =
-			currentSeconds - previousSeconds;
-		previousSeconds = currentSeconds;
-		if (fabs(lastPosition) > 1.0f) {
-			speed = -speed;
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) { /* W */
+			positionY += deslocamento;
+			if (positionY > 1.0f) {
+				positionY = 1.0f;
+			}
 		}
-		matrix[12] = elapsedSeconds * speed +
-			lastPosition;
-		lastPosition = matrix[12];
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) { /* A */
+			positionX -= deslocamento;
+			if (positionX < -1.0f) {
+				positionX = -1.0f;
+			}
+		}
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) { /* S */
+			positionY -= deslocamento;
+			if (positionY < -1.0f) {
+				positionY = -1.0f;
+			}
+		}
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) { /* D */
+			positionX += deslocamento;
+			if (positionX > 1.0f) {
+				positionX = 1.0f;
+			}
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS) { /* + */
+			speed += 0.005f;
+		}
+		if (glfwGetKey(window, GLFW_KEY_KP_SUBTRACT) == GLFW_PRESS) { /* - */
+			speed -= 0.005f;
+		}
+
+		//transformação
+		matrix[12] = positionX;
+		matrix[13] = positionY;
 		glUniformMatrix4fv(matrixLocation, 1, GL_FALSE, matrix);
 
+		//sprite
+		frameAtual = currentSeconds*fps;
+		acaoAtual = frameAtual / 4;
+		textureOffsetX = frameAtual * frameWidth;
+		textureOffsetY = acaoAtual * frameHeight;
+		glUniform1f(textureOffsetXLocation, textureOffsetX);
+		glUniform1f(textureOffsetYLocation, textureOffsetY);
 
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// Define vao como vertex array atual
-		glBindVertexArray(vao);
+		glBindVertexArray(VAO);
 		// desenha pontos a partir do p0 e 3 no total do VAO atual com o shader
 		// atualmente em uso
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glfwSwapBuffers(window);
 	}
 
