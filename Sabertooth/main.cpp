@@ -29,8 +29,9 @@ const char* fragment_shader =
 "out vec4 frag_color;"
 "void main () {"
 "	vec2 vt = vec2(texture_coordinates.x + offsetx, texture_coordinates.y + offsety);"
-"   frag_color = texture (texture, vt) * vec4(color, 1.0);"
-//"   frag_color = vec4(color, 1.0);"
+"   frag_color = texture (texture, vt) * vec4(1.0);"		//	textura
+//"   frag_color = texture (texture, vt) * vec4(color, 1.0);"	cor + textura
+//"   frag_color = vec4(color, 1.0);"							cor	
 "}";
 
 int main() {
@@ -77,11 +78,11 @@ int main() {
 
 	GLfloat texMap[] = {
 		0.0f, 0.0f,							// 1
-		0.25f, 0.0f,							// 2
-		0.25f, 0.25f,							// 3
+		0.25f, 0.0f,						// 2
+		0.25f, 0.25f,						// 3
 		0.0f, 0.0f,							// 1
-		0.0f, 0.25f,								// 4
-		0.25f, 0.25f								// 3
+		0.0f, 0.25f,						// 4
+		0.25f, 0.25f						// 3
 	};
 
 	GLuint verticeVBO = 0;
