@@ -1,4 +1,8 @@
 #include "System.h"
+#include <glm/vec3.hpp> // glm::vec3
+#include <glm/vec4.hpp> // glm::vec4
+#include <glm/mat4x4.hpp> // glm::mat4
+#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
 
 #define EXIT_FAILURE -1
 #define EXIT_SUCCESS 0
@@ -28,9 +32,9 @@ const char* fragment_shader =
 "out vec4 frag_color;"
 "void main () {"
 "	vec2 vt = vec2(texture_coordinates.x + offsetx, texture_coordinates.y + offsety);"
-"   frag_color = texture (texture, vt) * vec4(1.0);"		//	textura
-//"   frag_color = texture (texture, vt) * vec4(color, 1.0);"	cor + textura
-//"   frag_color = vec4(color, 1.0);"							cor	
+//"   frag_color = texture (texture, vt) * vec4(1.0);"			//	textura
+"   frag_color = texture (texture, vt) * vec4(color, 1.0);"	//	cor + textura
+//"   frag_color = vec4(color, 1.0);"							//	cor	
 "}";
 
 int main() {
@@ -40,12 +44,11 @@ int main() {
 	}
 	/* Caso necessário, definições específicas para SOs, p. e. Apple OSX *
 	/* Definir como 3.2 para Apple OS X */
-	/*glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 2);
-	glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-	glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);*/
-	GLFWwindow *window = glfwCreateWindow(
-		640, 480, "Teste de versão OpenGL", NULL, NULL);
+	//glfwWindowHint (GLFW_CONTEXT_VERSION_MAJOR, 3);
+	//glfwWindowHint (GLFW_CONTEXT_VERSION_MINOR, 3);
+	//glfwWindowHint (GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	//glfwWindowHint (GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+	GLFWwindow *window = glfwCreateWindow(640, 480, "Teste de versão OpenGL", NULL, NULL);
 	if (!window) {
 		fprintf(stderr, "ERROR: could not open window with GLFW3\n");
 		glfwTerminate();
@@ -75,7 +78,7 @@ int main() {
 		0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f		// 3
 	};
 
-	GLfloat texMap[] = {
+	GLfloat texMap[] = { // 4x4
 		0.0f, 0.0f,							// 1
 		0.25f, 0.0f,						// 2
 		0.25f, 0.25f,						// 3
@@ -83,6 +86,17 @@ int main() {
 		0.0f, 0.25f,						// 4
 		0.25f, 0.25f						// 3
 	};
+	/*
+	
+	GLfloat texMap[] = { //	1x1
+		0.0f, 0.0f,							// 1
+		1.0f, 0.0f,						// 2
+		1.0f, 1.0f,						// 3
+		0.0f, 0.0f,							// 1
+		0.0f, 1.0f,						// 4
+		1.0f, 1.0f						// 3
+	};
+	*/
 
 	GLuint verticeVBO = 0;
 	GLuint texVBO = 0;
@@ -180,8 +194,8 @@ int main() {
 	glEnable(GL_TEXTURE_2D);
 
 	// Para desenhar com alfa, na inicialização da aplicação, habilitar o alpha test :
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	int textureLocation = glGetUniformLocation(shader_program, "texture");
 	glUniform1i(textureLocation, 0);
 
@@ -191,17 +205,7 @@ int main() {
 
 //	#GAME LOOP
 
-	int numFrames = 4;
-	int numAcoes = 4;
-	float frameWidth = 1.0f / numFrames;
-	float frameHeight = 1.0f / numAcoes;
-	int frameAtual = 4;
-	int acaoAtual = 0;
-	float textureOffsetX = 0.0f;
-	float textureOffsetY = 0.0f;
-	int fps = 10;
-
-	static float speed = 0.3f;
+	static float speed = 1.0f;
 	static float positionX = 0.0f;
 	static float positionY = 0.0f;
 	static double previousSeconds = glfwGetTime();
@@ -252,16 +256,10 @@ int main() {
 		matrix[13] = positionY;
 		glUniformMatrix4fv(matrixLocation, 1, GL_FALSE, matrix);
 
-		//sprite
-		frameAtual = currentSeconds*fps;
-		acaoAtual = frameAtual / 4;
-		textureOffsetX = frameAtual * frameWidth;
-		textureOffsetY = acaoAtual * frameHeight;
-		glUniform1f(textureOffsetXLocation, textureOffsetX);
-		glUniform1f(textureOffsetYLocation, textureOffsetY);
-
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		// Define vao como vertex array atual
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, textureID);
 		glBindVertexArray(VAO);
 		// desenha pontos a partir do p0 e 3 no total do VAO atual com o shader
 		// atualmente em uso

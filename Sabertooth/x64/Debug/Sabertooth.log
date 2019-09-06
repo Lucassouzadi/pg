@@ -1,11 +1,11 @@
 ﻿  main.cpp
-c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(3): warning C4005: 'EXIT_FAILURE': redefinição de macro
+c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(7): warning C4005: 'EXIT_FAILURE': redefinição de macro
   c:\program files (x86)\windows kits\10\include\10.0.17763.0\ucrt\stdlib.h(49): note: consulte a definição anterior de 'EXIT_FAILURE'
-c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(220): warning C4244: '+=': conversão de 'double' para 'float', possível perda de dados
-c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(226): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
-c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(232): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
-c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(238): warning C4244: '+=': conversão de 'double' para 'float', possível perda de dados
-c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(256): warning C4244: '=': conversão de 'double' para 'int', possível perda de dados
+c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(234): warning C4244: '+=': conversão de 'double' para 'float', possível perda de dados
+c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(240): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
+c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(246): warning C4244: '-=': conversão de 'double' para 'float', possível perda de dados
+c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(252): warning C4244: '+=': conversão de 'double' para 'float', possível perda de dados
+c:\users\lucas souza\git\pg\pg\sabertooth\main.cpp(270): warning C4244: '=': conversão de 'double' para 'int', possível perda de dados
   SOIL.lib(SOIL.obj) : MSIL .netmodule ou módulo compilado com /GL encontrado; reiniciando link com /LTCG; adicione /LTCG ao link da linha de comando para melhorar performance do vinculador
 LINK : warning LNK4075: ignorando '/INCREMENTAL' devido a especificaþÒo '/LTCG'
 LINK : warning LNK4098: defaultlib 'MSVCRT' conflita com uso de outras bibliotecas; use /NODEFAULTLIB:library
